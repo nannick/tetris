@@ -1,0 +1,5 @@
+# Stuff to ignore for backend
+backend/node_modules/
+
+# Stuff to ignore for frontend
+frontend/node_modules/
