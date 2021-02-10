@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const constants = require("./constants");
 
 const app = express();
 
@@ -7,16 +8,29 @@ const app = express();
 app.use(cors());
 app.use(express.json({extended: false}))
 
+const PORT = process.env.PORT || constants.SERVER.DEFAULT_PORT;
 
-const DEFAULT_PORT = 5000;
-const PORT = process.env.PORT || DEFAULT_PORT;
 
-app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-});
 
 app.get('/', (req, res) => {
     res.send('Api running');
 });
 
+const socketIo = require("socket.io");
+const http = require("http");
+const server = http.createServer(app);
+
+// Allow cors for socket.io
+const io = socketIo(server,  {cors: {
+    origin: '*',
+  }} );
+
+const game_io = require('./game')(io);
+
+
+
+
+server.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+});
 

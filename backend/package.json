@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server",
-    "server": "nodemon server"
+    "server": "nodemon server",
+    "client": "npm start --prefix ../frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "author": "Rajarupan Sampanthan",
   "license": "ISC",
@@ -15,6 +17,11 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "express-validator": "^6.9.2",
+    "http": "0.0.1-security",
+    "socket.io": "^3.1.1",
+    "uuid": "^8.3.2",
+    "validatorjs": "^3.22.1"
   }
 }
