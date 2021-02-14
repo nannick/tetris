@@ -3,6 +3,12 @@ import './App.css';
 
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client"
+
+
+import { Provider } from 'react-redux'
+import store from './store'
+import Tetris from './components/tetris';
+
 const ENDPOINT = "http://localhost:5000";
 const socket = io(ENDPOINT);
 var game_id;
@@ -40,14 +46,18 @@ function App() {
     }, []);
   
     return (
-      <div>
+      <Provider store={store}>
       <p>
         It's {response}
       </p>
        <button onClick={()=>{a(game_id)}}>
 
      </button>
-     </div>
+
+     <Tetris/>
+     
+      </Provider>
+      
 
     );
 }
