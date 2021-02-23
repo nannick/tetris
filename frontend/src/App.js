@@ -7,7 +7,7 @@ import io from "socket.io-client"
 
 import { Provider } from 'react-redux'
 import store from './store'
-import Tetris from './components/tetris';
+import Tetris from './components/Tetris';
 
 const ENDPOINT = "http://localhost:5000";
 const socket = io(ENDPOINT);
@@ -47,14 +47,8 @@ function App() {
   
     return (
       <Provider store={store}>
-      <p>
-        It's {response}
-      </p>
-       <button onClick={()=>{a(game_id)}}>
 
-     </button>
-
-     <Tetris/>
+     <Tetris numRows = {20} numColumns = {10}/>
      
       </Provider>
       
