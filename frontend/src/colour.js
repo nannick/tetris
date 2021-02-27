@@ -9,6 +9,7 @@
 
 module.exports = {
     empty : "#000000",
+    white : "#FFFFFF",
     piece_colours : [
         "#7FFFD4",
         "#D2691E",

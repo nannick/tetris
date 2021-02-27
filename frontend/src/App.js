@@ -48,7 +48,7 @@ function App() {
     return (
       <Provider store={store}>
 
-     <Tetris numRows = {20} numColumns = {10}/>
+     <Tetris numRows = {20} numColumns = {15}/>
      
       </Provider>
       

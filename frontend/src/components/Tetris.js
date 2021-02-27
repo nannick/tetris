@@ -2,6 +2,12 @@
 import React, {Fragment} from 'react';
 import Board  from './Board';
 import Colour from '../colour';
+
+const ROTATE = [
+  {x : [0,-1], y : [1,0]},
+  {x : [-1,0], y : [0,-1]},
+  {x : [0,1], y : [-1,0]}
+] 
 class Tetris extends React.Component {
 
     constructor(props) {
@@ -16,9 +22,9 @@ class Tetris extends React.Component {
         this.getPieces(2);
         
         this.state={
-            current_rotation_point : {x : props.numColumns >> 1 , y: props.numRows -1},
-            current_piece : this.pieceQueue.shift(),
-            board : this.createEmptyBoard(props.numRows, props.numColumns)
+          current_piece : this.pieceQueue.shift(),
+          current_rotation_point : {x : props.numColumns >> 1 , y: props.numRows -2},
+          board : this.createEmptyBoard(props.numRows, props.numColumns)
         }
 
         window.addEventListener('keydown', (event) => {
@@ -33,6 +39,16 @@ class Tetris extends React.Component {
           }
           else if (event.key == 'ArrowDown'){
             this.movePieceDown();
+          }
+
+          else if (event.key=='1'){
+            this.spinPiece(0);
+          }
+          else if (event.key=='2'){
+            this.spinPiece(1);
+          }
+          else if (event.key=='3'){
+            this.spinPiece(2);
           }
         });
       
@@ -54,7 +70,36 @@ class Tetris extends React.Component {
         return board;
     }
 
-    spinPiece(){
+    spinPiece(degree){
+      const r = ROTATE[degree];
+      const xRot = r.x;
+      const yRot = r.y;
+
+      const parts = this.state.current_piece.parts;
+      const numParts = parts.length;
+      var newParts = [];
+      
+      console.log(parts)
+
+      for( var i = 0; i < numParts; i++){
+        const currPart = parts[i];
+        const newXRel = xRot[0] * currPart.x + xRot[1] * currPart.y;
+        const newYRel = yRot[0] * currPart.x + yRot[1] * currPart.y;
+
+        const nextRelative = {x : newXRel, y : newYRel};
+        newParts.push(nextRelative);
+      }
+
+      if (!this.checkCollision(this.state.current_rotation_point, newParts)){
+        console.log(newParts);
+        this.setState({
+          ...this.state, 
+          current_piece : {
+            ...this.state.current_piece,
+            parts : newParts
+          }
+        });
+      }
 
     }
 
@@ -63,7 +108,7 @@ class Tetris extends React.Component {
         x : this.state.current_rotation_point.x,
         y : this.state.current_rotation_point.y - 1
       }
-      if (!this.checkCollision(nextPosition)){
+      if (!this.checkCollision(nextPosition, this.state.current_piece.parts)){
         
         this.setState({
           ...this.state, 
@@ -73,22 +118,27 @@ class Tetris extends React.Component {
       }
       else{
         //Piece is stuck on board, so draw it permanently on 
-        this.drawPiece(this.state.current_rotation_point, this.state.current_piece.colour);
+        const success = this.drawPiece(this.state.current_rotation_point, this.state.current_piece.colour);
 
+        if (success){
+          //Erase any full rows
+          this.eraseLines();
 
-        //Erase any full rows
-        this.eraseLines();
-
-        // Get another piece, move to next piece and update the rotation point
-        this.getPieces(1);
-        this.setState({
-          ...this.state,
-          current_rotation_point : {
-            x : this.numColumns >> 1 , 
-            y: this.numRows - 1
-          }, 
-          current_piece : this.pieceQueue.shift()
-        });
+          // Get another piece, move to next piece and update the rotation point
+          this.getPieces(1);
+          this.setState({
+            ...this.state,
+            current_rotation_point : {
+              x : this.numColumns >> 1 , 
+              y: this.numRows - 2
+            }, 
+            current_piece : this.pieceQueue.shift()
+          });
+        }
+        else{
+          //Game Over
+          console.log("Game Over")
+        }
 
       }
     }
@@ -99,7 +149,7 @@ class Tetris extends React.Component {
         y : this.state.current_rotation_point.y
       }
 
-      if (!this.checkCollision(nextPosition)){
+      if (!this.checkCollision(nextPosition, this.state.current_piece.parts)){
         this.setState({
           ...this.state, 
           current_rotation_point : nextPosition
@@ -114,14 +164,14 @@ class Tetris extends React.Component {
       return x_val >= 0 && x_val < this.numColumns;
     }
 
-    checkCollision(nextPosition){
+    checkCollision(nextPosition, parts){
       const  currX = nextPosition.x;
       const  currY = nextPosition.y;
-      const num_parts = this.state.current_piece.parts.length;
+      const num_parts = parts.length;
  
       for (var i = 0; i < num_parts; i++){
-        const  xShift = this.state.current_piece.parts[i].x;
-        const  yShift = this.state.current_piece.parts[i].y;
+        const  xShift = parts[i].x;
+        const  yShift = parts[i].y;
         const newX = currX+xShift;
         const newY = currY+yShift;
         if (this.checkYBounds(newY) && this.checkXBounds(newX)){
@@ -138,13 +188,22 @@ class Tetris extends React.Component {
 
     drawPiece(pos,colour){
       const {x : current_x, y: current_y} = pos;
+      var pass = true;
       this.state.current_piece.parts.forEach((shift) => {
         const {x : shift_x, y: shift_y} = shift;
         const newX = current_x + shift_x;
         const newY = current_y + shift_y;
-        this.state.board[newY][newX] = colour;
+        console.log(`New x is ${newX} New y is ${newY}`);
+        
+        if (this.checkXBounds(newX) && this.checkYBounds(newY) && this.state.board[newY][newX] == Colour.empty ){
+          this.state.board[newY][newX] = colour;
+        }
+        else {
+          pass  = false;
+        }
       }
       );
+      return pass;
     }
 
     eraseLines(){
@@ -161,7 +220,15 @@ class Tetris extends React.Component {
               y : 0
             },
             {
-              x : -1,
+              x : 0,
+              y : 1
+            },
+            {
+              x : 1,
+              y : 0
+            },
+            {
+              x : 2,
               y : 0
             }
         ],
