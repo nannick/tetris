@@ -28,7 +28,6 @@ class Tetris extends React.Component {
         }
 
         window.addEventListener('keydown', (event) => {
-          console.log(event);
           if (event.key == 'ArrowRight'){
             this.movePieceSide(1);
 
@@ -193,7 +192,7 @@ class Tetris extends React.Component {
         const {x : shift_x, y: shift_y} = shift;
         const newX = current_x + shift_x;
         const newY = current_y + shift_y;
-        console.log(`New x is ${newX} New y is ${newY}`);
+        // console.log(`New x is ${newX} New y is ${newY}`);
         
         if (this.checkXBounds(newX) && this.checkYBounds(newY) && this.state.board[newY][newX] == Colour.empty ){
           this.state.board[newY][newX] = colour;
@@ -207,7 +206,70 @@ class Tetris extends React.Component {
     }
 
     eraseLines(){
-      console.log("Erase lines func");
+      var rowsToCheck = new Set();
+      const current_y = this.state.current_rotation_point.y;
+
+      // Get all the rows the piece occupies
+      this.state.current_piece.parts.forEach((shift) => {
+        const shift_y = shift.y;
+        const newY = current_y + shift_y;
+        rowsToCheck.add(newY);
+      });
+
+      // Get all the rows that the piece now fills
+      var rowsToErase = [];
+      rowsToCheck.forEach((rowNum) =>{
+        var eraseRow = true;
+        var columnIndex = 0;
+        const row = this.state.board[rowNum];
+
+        while (eraseRow && columnIndex < this.numColumns) {
+          const colour = row[columnIndex];
+          if (colour == Colour.empty){
+            eraseRow = false;
+          }
+          else {
+            columnIndex += 1;
+          }
+        }
+
+        if (eraseRow){
+          rowsToErase.push(rowNum);
+        }
+      });
+
+      rowsToErase.sort();
+      
+
+      const numRowsToErase = rowsToErase.length;
+
+      if (numRowsToErase > 0){
+        rowsToErase.push(this.numRows);
+        var rIndex = 0;
+        var rowToStart = 0;
+        var rowToWrite = 0;
+
+        while( rowToWrite < this.numRows){
+          while(rIndex < numRowsToErase && rowsToErase[rIndex] == rowToStart){
+            rIndex += 1;
+            rowToStart += 1;
+          }
+
+          for(var r = rowToStart; r < rowsToErase[rIndex]; r++){
+            this.state.board[rowToWrite] = this.state.board[r];
+            rowToWrite += 1;
+          }
+          rowToStart = rowsToErase[rIndex] + 1;
+          rIndex +=1;
+
+          if (rIndex > numRowsToErase){
+            for(var r = rowToWrite; r < this.numRows; r++){
+              this.state.board[r] = this.createEmptyRow(this.numColumns);
+            }
+            rowToWrite = this.numRows;
+          }
+        }
+      }
     }
 
     // TODO make call to backend to get pieces. Right now used fixed pieces
@@ -232,7 +294,7 @@ class Tetris extends React.Component {
               y : 0
             }
         ],
-          colour : Colour.piece_colours[0]
+          colour : Colour.random_colour()
       });
       }
     }
