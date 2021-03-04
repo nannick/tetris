@@ -3,3 +3,8 @@ backend/node_modules/
 
 # Stuff to ignore for frontend
 frontend/node_modules/
+
+
+.vscode/
+
+*/__pycache__/*
