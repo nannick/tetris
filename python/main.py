@@ -8,7 +8,7 @@ if __name__ == "__main__":
     pygame.init()
 
     num_rows = 20
-    num_columns = 15
+    num_columns = 10
 
     pixel_size = 40
 
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     done = False
 
     tetris = Tetris(num_rows, num_columns)
-    tetris.assign_new_piece([num_columns >> 1, num_rows - 1], [[0, 0]])
+    tetris.assign_new_piece([[0, 0]])
 
     MOVE_DOWN = pygame.USEREVENT + 1
     pygame.time.set_timer(MOVE_DOWN, 1000)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
                     # Is temporary once machine learning model is created, generator will create the pieces
                     # Make another algo to put it in a default position
                     tetris.assign_new_piece(
-                        [num_columns >> 1, num_rows - 1], [[0, 0], [1, 0], [2, 0], [0, 1])
+                        [[0, 0], [1, 0], [2, 0], [0, 1]])
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:

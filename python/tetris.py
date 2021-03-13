@@ -1,5 +1,5 @@
 
-
+import copy
 from constants import COLOURS, BLACK, X, Y, ROTATION, FIXED
 
 
@@ -28,7 +28,7 @@ def rotate_parts(parts, mode):
 
 
 class Tetris():
-    def __init__(self, height, width):
+    def __init__(self, height, width, move_down_frames):
         self.height = height
         self. width = width
         self.board = []
@@ -36,30 +36,32 @@ class Tetris():
         self.piece_parts = None
         self.need_new_piece = True
         self.game_over = False
+        self.score = 0
+        self.num_frames = 0
+        self.move_down_frames = move_down_frames
         for _ in range(height):
             self.board.append(create_empty_row(width))
 
-    def in_bounds(self, x, y):
+    def in_play(self, x, y):
         in_x = x >= 0 and x < self.width
-        in_y = y >= 0 and y < self.height
+        in_y = y >= 0
         return in_x and in_y
+
+    def y_valid(self, y):
+        return y >= 0 and y < self.height
 
     def check_collision(self, rotation_point, piece_parts):
 
         origin_x = rotation_point[X]
         origin_y = rotation_point[Y]
 
-        for part in piece_parts:
-            relative_x = part[X]
-            relative_y = part[Y]
+        for relative in piece_parts:
+            new_x = origin_x + relative[X]
+            new_y = origin_y + relative[Y]
 
-            new_x = origin_x + relative_x
-            new_y = origin_y + relative_y
-
-            if self.in_bounds(new_x, new_y):
-                if self.board[new_y][new_x] != BLACK:
+            if self.in_play(new_x, new_y):
+                if self.y_valid(new_y) and self.board[new_y][new_x] != BLACK:
                     return True
-
             else:
                 return True
 
@@ -101,6 +103,7 @@ class Tetris():
     def erase_rows(self, rows_to_erase):
         rows_to_erase.sort()
         num_rows_to_erase = len(rows_to_erase)
+        self.score += num_rows_to_erase
 
         if num_rows_to_erase > 0:
             read_index = 0
@@ -129,12 +132,10 @@ class Tetris():
         origin_y = self.rotation_point[Y]
         rows_changed = set()
 
-        for part in self.piece_parts:
-            relative_x = part[X]
-            relative_y = part[Y]
-            new_x = origin_x + relative_x
-            new_y = origin_y + relative_y
-            if self.board[new_y][new_x] == BLACK:
+        for relative in self.piece_parts:
+            new_x = origin_x + relative[X]
+            new_y = origin_y + relative[Y]
+            if self.y_valid(new_y) and self.board[new_y][new_x] == BLACK:
                 self.board[new_y][new_x] = FIXED
                 rows_changed.add(new_y)
             else:
@@ -154,9 +155,50 @@ class Tetris():
 
         return is_erasable
 
-    def assign_new_piece(self, new_rotation_point, new_parts):
+    def assign_new_piece(self, new_parts):
 
         if self.need_new_piece:
-            self.rotation_point = new_rotation_point
             self.piece_parts = new_parts
+            self.rotation_point = self.place_piece(new_parts)
             self.need_new_piece = False
+
+    def get_board_state(self):
+        v = copy.deepcopy(self.board)
+        origin_x = self.rotation_point[X]
+        origin_y = self.rotation_point[Y]
+        rows_changed = set()
+
+        for relative in self.piece_parts:
+            new_x = origin_x + relative[X]
+            new_y = origin_y + relative[Y]
+            self.board[new_y][new_x] = FIXED
+
+    def place_piece(self, new_parts):
+
+        max_y = 0
+        for relative in self.piece_parts:
+            max_y = max(max_y, relative[Y])
+
+        return [self.width >> 1, self.height - 1 + max_y]
+
+    def reset(self):
+        self.score = 0
+
+        for i in range(self.height):
+            for j in range(self.width):
+                self.board[i][j] = BLACK
+
+        self.need_new_piece = True
+
+    def loop(self, actions):
+
+        if not (self.game_over or self.need_new_piece):
+
+            if self.num_frames % self.move_down_frames == 0:
+                # should move down
+                pass
+
+            # Based on actions you should move/ rotate the piece in a certain way
+            pass
+            self.num_frames += 1
+        return (self.game_over, self.need_new_piece)
